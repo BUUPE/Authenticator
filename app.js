@@ -25,13 +25,9 @@ admin.initializeApp({
 
 const firestore = admin.firestore();
 
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
+passport.serializeUser((user, done) => done(null, user));
 
-passport.deserializeUser(function(user, done) {
-  done(null, user);
-});
+passport.deserializeUser((user, done) => done(null, user));
 
 const SamlOptions = {
   // URL that goes from the Identity Provider -> Service Provider
@@ -176,7 +172,7 @@ app.get("/shibboleth/metadata", (req, res) => {
 app.get("/keepalive", (req, res) => res.send("Alive"));
 
 // general error handler
-app.use(function(err, req, res, next) {
+app.use((err, req, res, next) => {
   console.error("Fatal error: " + JSON.stringify(err));
   next(err);
 });
@@ -187,6 +183,6 @@ app.listen(serverPort, () => console.log(`Listening on port ${serverPort}`));
 console.log(`Starting keepalive for ${process.env.KEEPALIVE_URL}`);
 cron.schedule("0 */25 * * * *", () =>
   fetch(process.env.KEEPALIVE_URL)
-    .then(res => console.log(`response-ok: ${res.ok}, status: ${res.status}`))
+    .then(res => console.log(`Keepalive: response-ok: ${res.ok}, status: ${res.status}`))
     .catch(console.error)
 );
