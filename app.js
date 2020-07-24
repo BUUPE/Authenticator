@@ -115,6 +115,7 @@ const fetchUID = email => {
 
 // generates a firebase token, tied to the uid that matches the sso email
 const generateToken = async ssoData => {
+  console.log(ssoData);
   const email = ssoData[email];
   const uid = await fetchUID(email);
   const additionalClaims = { ...ssoData }; // include sso data so client apps can access it
@@ -126,9 +127,13 @@ const generateToken = async ssoData => {
     .catch(error => console.log("Error creating custom token:", error));
 };
 
-app.get("/", saveReferrer, ensureAuthenticated, async (req, res) => {
+app.get("/", ensureAuthenticated, async (req, res) => {
+  res.send('Authenticated!');
+});
+
+app.get("/token", saveReferrer, ensureAuthenticated, async (req, res) => {
   const token = await generateToken(req.user);
-  res.header("Set-Cookie", `firebase-token=${token}; Max-Age=60; Secure`);
+  res.header("Set-Cookie", `firebase-token=${token}; Max-Age=60`); // ; Secure
   res.redirect(`${req.session.referrer}login/callback`);
 });
 
