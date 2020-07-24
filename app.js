@@ -2,10 +2,11 @@ const fs = require("fs");
 const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
 const express = require("express");
+const session = require("express-session");
+const FirestoreStore = require("connect-session-firestore")(session);
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const session = require("express-session");
 const passport = require("passport");
 const SamlStrategy = require("passport-saml").Strategy;
 
@@ -76,6 +77,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   session({
+    store: new FirestoreStore({
+      database: firestore,
+      sessions: "authSessions"
+    }),
     secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
@@ -130,7 +135,7 @@ const generateToken = async ssoData => {
 };
 
 app.get("/", ensureAuthenticated, (req, res) => {
-  res.send('Authenticated!');
+  res.send("Authenticated!");
 });
 
 app.get("/token", saveReferrer, ensureAuthenticated, async (req, res) => {
@@ -166,7 +171,7 @@ app.get("/shibboleth/metadata", (req, res) => {
     .send(samlStrategy.generateServiceProviderMetadata(cert, cert));
 });
 
-app.get("/keepalive", (req, res) => res.send('Alive'));
+app.get("/keepalive", (req, res) => res.send("Alive"));
 
 // general error handler
 app.use(function(err, req, res, next) {

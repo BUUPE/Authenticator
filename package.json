@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Connects BU UPE applications to BU Kerberos for login.",
   "dependencies": {
+    "connect-session-firestore": "^1.0.0",
     "cookie-parser": "^1.4.4",
     "dotenv": "^8.2.0",
     "eslint": "^7.5.0",
