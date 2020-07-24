@@ -93,7 +93,8 @@ const saveReferrer = (req, res, next) => {
 
 // makes sure user is authenticated before forwarding to route
 const ensureAuthenticated = (req, res, next) => {
-  console.log("auth?", req.isAuthenticated())
+  console.log("auth?", req.isAuthenticated());
+  console.log("user?", req.user);
   if (req.isAuthenticated()) return next();
   else return res.redirect("/login");
 };
