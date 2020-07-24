@@ -1,4 +1,6 @@
 const fs = require("fs");
+const cron = require("node-cron");
+const fetch = require("node-fetch");
 const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
 const express = require("express");
@@ -181,3 +183,10 @@ app.use(function(err, req, res, next) {
 
 const serverPort = process.env.PORT || 3030;
 app.listen(serverPort, () => console.log(`Listening on port ${serverPort}`));
+
+console.log(`Starting keepalive for ${process.env.KEEPALIVE_URL}`);
+cron.schedule("0 */25 * * * *", () =>
+  fetch(process.env.KEEPALIVE_URL)
+    .then(res => console.log(`response-ok: ${res.ok}, status: ${res.status}`))
+    .catch(console.error)
+);
