@@ -464,11 +464,6 @@ configstore@^5.0.0:
     write-file-atomic "^3.0.0"
     xdg-basedir "^4.0.0"
 
-connect-session-firestore@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/connect-session-firestore/-/connect-session-firestore-1.0.0.tgz#f44d150dcc82717a02d591200926dafe7cbbaf97"
-  integrity sha512-QPCsoILgN6m85OjPicNa5epmwSqnJKo4LMSg4LRMU+8A3W122jfOA3R5N/ngkNVpiOBigU4VrfFfI6qD7EnISg==
-
 content-disposition@0.5.3:
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/content-disposition/-/content-disposition-0.5.3.tgz#e130caf7e7279087c5616c2007d0485698984fbd"
@@ -896,6 +891,11 @@ firebase-admin@^9.0.0:
   optionalDependencies:
     "@google-cloud/firestore" "^4.0.0"
     "@google-cloud/storage" "^5.0.0"
+
+firestore-store@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/firestore-store/-/firestore-store-2.0.1.tgz#64959047c28548b5db4803b26c1dbede2038c2d0"
+  integrity sha512-msC7UnYiavmfDz5iUZrlCDbcg8hBarR4CV2f5RmDQ+HRFShEutWte3L7hzwlIncKJA898jeqhwHM6lkVq3jiVA==
 
 flat-cache@^2.0.1:
   version "2.0.1"

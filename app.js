@@ -3,7 +3,7 @@ const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
 const express = require("express");
 const session = require("express-session");
-const FirestoreStore = require("connect-session-firestore")(session);
+const FirestoreStore = require("firestore-store")(session);
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
@@ -79,7 +79,7 @@ app.use(
   session({
     store: new FirestoreStore({
       database: firestore,
-      sessions: "authSessions"
+      collection: "authSessions"
     }),
     secret: process.env.SESSION_SECRET,
     resave: true,
