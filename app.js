@@ -129,7 +129,7 @@ const generateToken = async ssoData => {
     .catch(error => console.log("Error creating custom token:", error));
 };
 
-app.get("/", ensureAuthenticated, async (req, res) => {
+app.get("/", ensureAuthenticated, (req, res) => {
   res.send('Authenticated!');
 });
 
@@ -165,6 +165,8 @@ app.get("/shibboleth/metadata", (req, res) => {
     .status(200)
     .send(samlStrategy.generateServiceProviderMetadata(cert, cert));
 });
+
+app.get("/keepalive", (req, res) => res.send('Alive'));
 
 // general error handler
 app.use(function(err, req, res, next) {
