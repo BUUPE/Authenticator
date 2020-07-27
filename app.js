@@ -1,11 +1,11 @@
 const fs = require("fs");
-const path = require('path');
+const path = require("path");
 const cron = require("node-cron");
 const fetch = require("node-fetch");
 const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
 const express = require("express");
-const favicon = require('serve-favicon');
+const favicon = require("serve-favicon");
 const session = require("express-session");
 const FirestoreStore = require("firestore-store")(session);
 const dotenv = require("dotenv");
@@ -85,7 +85,7 @@ const parser = {
 };
 
 app.enable("trust proxy"); // required when running on Heroku as SSL terminates before reaching express
-app.use(favicon(path.join(__dirname, 'favicon.ico')))
+app.use(favicon(path.join(__dirname, "favicon.ico")));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -139,27 +139,29 @@ const fetchUID = email => {
 
 const mapKerberosFields = kerberosData => {
   return {
-    firstName: kerberosData['urn:oid:2.5.4.42'],
-    lastName: kerberosData['urn:oid:2.5.4.4'],
+    firstName: kerberosData["urn:oid:2.5.4.42"],
+    lastName: kerberosData["urn:oid:2.5.4.4"],
     email: kerberosData.email,
-    affiliations: kerberosData['urn:oid:1.3.6.1.4.1.5923.1.1.1.1'],
-    primaryAffiliation: kerberosData['urn:oid:1.3.6.1.4.1.5923.1.1.1.5'],
-    organization: kerberosData['urn:oid:2.5.4.10']
-  }
-}
+    affiliations: kerberosData["urn:oid:1.3.6.1.4.1.5923.1.1.1.1"],
+    primaryAffiliation: kerberosData["urn:oid:1.3.6.1.4.1.5923.1.1.1.5"],
+    organization: kerberosData["urn:oid:2.5.4.10"]
+  };
+};
 
 // generates a firebase token, tied to the uid that matches the sso email
 const generateToken = async user => {
-  const {email} = user;
+  const { email } = user;
   const uid = await fetchUID(email);
   const additionalClaims = { ...user }; // include sso data so auth rules can access it
 
-  await admin.auth().updateUser(uid, {
-    displayName: `${user.firstName} ${user.lastName}`,
-    email,
-    emailVerified: true
-  })
-  .catch(console.error);
+  await admin
+    .auth()
+    .updateUser(uid, {
+      displayName: `${user.firstName} ${user.lastName}`,
+      email,
+      emailVerified: true
+    })
+    .catch(console.error);
 
   return admin
     .auth()
