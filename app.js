@@ -71,11 +71,11 @@ passport.use(samlStrategy);
 const app = express();
 
 const parser = {
-  read: (doc) => JSON.parse(doc.session),
-  save: (doc) => {
+  read: doc => JSON.parse(doc.session),
+  save: doc => {
     return {
       session: JSON.stringify(doc),
-      dateModified: Date.now()
+      dateModified: new Date()
     };
   }
 };
@@ -144,15 +144,15 @@ const generateToken = async ssoData => {
 };
 
 app.post("/generateUIDs", (req, res) => {
-  const {emails} = req.body;
+  const { emails } = req.body;
   const fetchUIDs = emails.map(email => fetchUID(email));
-  Promise.all(fetchUIDs).then((uids) => {
+  Promise.all(fetchUIDs).then(uids => {
     const mapped = uids.map((uid, i) => {
       return {
         email: emails[i],
         uid
-      }
-    })
+      };
+    });
 
     res.json(mapped);
   });
@@ -209,10 +209,19 @@ app.listen(serverPort, () => console.log(`Listening on port ${serverPort}`));
 console.log(`Starting keepalive for ${process.env.KEEPALIVE_URL}`);
 cron.schedule("0 */25 * * * *", () => {
   fetch(process.env.KEEPALIVE_URL)
-    .then(res => console.log(`Keepalive: response-ok: ${res.ok}, status: ${res.status}`))
+    .then(res =>
+      console.log(`Keepalive: response-ok: ${res.ok}, status: ${res.status}`)
+    )
     .catch(console.error);
 
+  console.log("Pruning authSessions...");
   const now = new Date();
-  const pruneTime = new Date(now.getTime() - 25*60000)
-  firestore.collection("authSessions").where("dateModified", "<", pruneTime).delete();
+  const pruneTime = new Date(now.getTime() - 25 * 60000);
+  firestore
+    .collection("authSessions")
+    .where("dateModified", "<", pruneTime)
+    .get()
+    .then(querySnapshot =>
+      querySnapshot.forEach(snapshot => snapshot.ref.delete())
+    );
 });
