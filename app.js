@@ -1,9 +1,11 @@
 const fs = require("fs");
+const path = require('path');
 const cron = require("node-cron");
 const fetch = require("node-fetch");
 const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
 const express = require("express");
+const favicon = require('serve-favicon');
 const session = require("express-session");
 const FirestoreStore = require("firestore-store")(session);
 const dotenv = require("dotenv");
@@ -83,6 +85,7 @@ const parser = {
 };
 
 app.enable("trust proxy"); // required when running on Heroku as SSL terminates before reaching express
+app.use(favicon(path.join(__dirname, 'favicon.ico')))
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
