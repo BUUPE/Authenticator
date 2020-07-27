@@ -25,12 +25,12 @@ admin.initializeApp({
 
 const firestore = admin.firestore();
 
-passport.serializeUser((user, done) => {
+passport.serializeUser(function(user, done) {
   console.log("serialize", user)
   done(null, user)
 });
 
-passport.deserializeUser((user, done) => {
+passport.deserializeUser(function(user, done) {
   console.log("deserialize", user)
   done(null, user)
 });
