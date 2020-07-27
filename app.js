@@ -129,8 +129,23 @@ const generateToken = async ssoData => {
     .auth()
     .createCustomToken(uid, additionalClaims)
     .then(customToken => customToken)
-    .catch(error => console.log("Error creating custom token:", error));
+    .catch(error => console.error("Error creating custom token:", error));
 };
+
+app.post("/generateUIDs", (req, res) => {
+  const {emails} = req.body;
+  const fetchUIDs = emails.map(email => fetchUID(email));
+  Promise.all(fetchUIDs).then((uids) => {
+    const mapped = uids.map((uid, i) => {
+      return {
+        email: emails[i],
+        uid
+      }
+    })
+
+    res.json(mapped);
+  });
+});
 
 app.get("/", ensureAuthenticated, (req, res) => {
   res.send("Authenticated!");
