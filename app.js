@@ -25,15 +25,9 @@ admin.initializeApp({
 
 const firestore = admin.firestore();
 
-passport.serializeUser(function(user, done) {
-  console.log("serialize", user)
-  done(null, user)
-});
+passport.serializeUser((user, done) => done(null, user));
 
-passport.deserializeUser(function(user, done) {
-  console.log("deserialize", user)
-  done(null, user)
-});
+passport.deserializeUser((user, done) => done(null, user));
 
 const SamlOptions = {
   // URL that goes from the Identity Provider -> Service Provider
@@ -86,6 +80,7 @@ const parser = {
   }
 };
 
+app.enable("trust proxy");
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -99,7 +94,11 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
-    //cookie: { secure: true }
+    proxy: true,
+    cookie: {
+      secure: true,
+      maxAge: 25 * 60 * 1000
+    }
   })
 );
 app.use(passport.initialize());
@@ -113,9 +112,6 @@ const saveReferrer = (req, res, next) => {
 
 // makes sure user is authenticated before forwarding to route
 const ensureAuthenticated = (req, res, next) => {
-  console.log("auth?", req.isAuthenticated());
-  console.log("user?", req.user);
-  console.log("session", req.session);
   if (req.isAuthenticated()) return next();
   else return res.redirect("/login");
 };
