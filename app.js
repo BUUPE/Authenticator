@@ -151,6 +151,18 @@ const generateToken = async user => {
   const uid = await fetchUID(email);
   const additionalClaims = { ...user }; // include sso data so client apps can access it
 
+/* set user data/profile all that jazz here before generating token
+  admin.auth().updateUser(uid, {
+  email: "modifiedUser@example.com"
+})
+  .then(function(userRecord) {
+    // See the UserRecord reference doc for the contents of userRecord.
+    console.log("Successfully updated user", userRecord.toJSON());
+  })
+  .catch(function(error) {
+    console.log("Error updating user:", error);
+  });*/
+
   return admin
     .auth()
     .createCustomToken(uid, additionalClaims)
@@ -175,8 +187,7 @@ app.post("/generateUIDs", (req, res) => {
 
 app.get("/", saveReferrer, ensureAuthenticated, async (req, res) => {
   const token = await generateToken(mapKerberosFields(req.user));
-  res.header("Set-Cookie", `firebase-token=${token}`); // ; Max-Age=60 ; Secure
-  res.redirect(`${req.session.referrer}login/callback`);
+  res.redirect(`${req.session.referrer}login/callback?token=${token}`);
 });
 
 app.get(
