@@ -132,12 +132,22 @@ const fetchUID = email => {
   });
 };
 
+const mapKerberosFields = kerberosData => {
+  return {
+    firstName: kerberosData['urn:oid:2.5.4.42'],
+    lastName: kerberosData['urn:oid:2.5.4.4'],
+    email: kerberosData.email,
+    affiliations: kerberosData['urn:oid:1.3.6.1.4.1.5923.1.1.1.1'],
+    primaryAffiliation: kerberosData['urn:oid:1.3.6.1.4.1.5923.1.1.1.5'],
+    organization: kerberosData['urn:oid:2.5.4.10']
+  }
+}
+
 // generates a firebase token, tied to the uid that matches the sso email
-const generateToken = async ssoData => {
-  console.log(ssoData);
-  const email = ssoData[email];
+const generateToken = async user => {
+  const {email} = user;
   const uid = await fetchUID(email);
-  const additionalClaims = { ...ssoData }; // include sso data so client apps can access it
+  const additionalClaims = { ...user }; // include sso data so client apps can access it
 
   return admin
     .auth()
@@ -166,7 +176,7 @@ app.get("/", ensureAuthenticated, (req, res) => {
 });
 
 app.get("/token", saveReferrer, ensureAuthenticated, async (req, res) => {
-  const token = await generateToken(req.user);
+  const token = await generateToken(mapKerberosFields(req.user));
   res.header("Set-Cookie", `firebase-token=${token}; Max-Age=60`); // ; Secure
   res.redirect(`${req.session.referrer}login/callback`);
 });
