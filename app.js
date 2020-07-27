@@ -70,12 +70,23 @@ passport.use(samlStrategy);
 
 const app = express();
 
+const parser = {
+  read: (doc) => JSON.parse(doc.session),
+  save: (doc) => {
+    return {
+      session: JSON.stringify(doc),
+      dateModified: Date.now()
+    };
+  }
+};
+
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   session({
     store: new FirestoreStore({
+      parser,
       database: firestore,
       collection: "authSessions"
     }),
@@ -196,8 +207,12 @@ const serverPort = process.env.PORT || 3030;
 app.listen(serverPort, () => console.log(`Listening on port ${serverPort}`));
 
 console.log(`Starting keepalive for ${process.env.KEEPALIVE_URL}`);
-cron.schedule("0 */25 * * * *", () =>
+cron.schedule("0 */25 * * * *", () => {
   fetch(process.env.KEEPALIVE_URL)
     .then(res => console.log(`Keepalive: response-ok: ${res.ok}, status: ${res.status}`))
-    .catch(console.error)
-);
+    .catch(console.error);
+
+  const now = new Date();
+  const pruneTime = new Date(now.getTime() - 25*60000)
+  firestore.collection("authSessions").where("dateModified", "<", pruneTime).delete();
+});
