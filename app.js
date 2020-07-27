@@ -149,19 +149,14 @@ const mapKerberosFields = kerberosData => {
 const generateToken = async user => {
   const {email} = user;
   const uid = await fetchUID(email);
-  const additionalClaims = { ...user }; // include sso data so client apps can access it
+  const additionalClaims = { ...user }; // include sso data so auth rules can access it
 
-/* set user data/profile all that jazz here before generating token
-  admin.auth().updateUser(uid, {
-  email: "modifiedUser@example.com"
-})
-  .then(function(userRecord) {
-    // See the UserRecord reference doc for the contents of userRecord.
-    console.log("Successfully updated user", userRecord.toJSON());
+  await admin.auth().updateUser(uid, {
+    displayName: `${user.firstName} ${user.lastName}`,
+    email,
+    emailVerified: true
   })
-  .catch(function(error) {
-    console.log("Error updating user:", error);
-  });*/
+  .catch(console.error);
 
   return admin
     .auth()
