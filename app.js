@@ -154,14 +154,20 @@ const generateToken = async user => {
   const uid = await fetchUID(email);
   const additionalClaims = { ...user }; // include sso data so auth rules can access it
 
-  await admin
-    .auth()
-    .updateUser(uid, {
-      displayName: `${user.firstName} ${user.lastName}`,
-      email,
-      emailVerified: true
-    })
-    .catch(console.error);
+  // only update user and db if this is the first time (email verified is false)
+  const { emailVerified } = await admin.auth().getUser(uid);
+  if (!emailVerified) {
+    await admin
+      .auth()
+      .updateUser(uid, {
+        displayName: `${user.firstName} ${user.lastName}`,
+        email,
+        emailVerified: true
+      })
+      .catch(console.error);
+
+    await firestore.doc(`users/${uid}`).update(user);
+  }
 
   return admin
     .auth()
