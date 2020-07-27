@@ -175,7 +175,7 @@ app.post("/generateUIDs", (req, res) => {
 
 app.get("/", saveReferrer, ensureAuthenticated, async (req, res) => {
   const token = await generateToken(mapKerberosFields(req.user));
-  res.header("Set-Cookie", `firebase-token=${token}; SameSite=None`); // ; Max-Age=60 ; Secure
+  res.header("Set-Cookie", `firebase-token=${token}`); // ; Max-Age=60 ; Secure
   res.redirect(`${req.session.referrer}login/callback`);
 });
 
