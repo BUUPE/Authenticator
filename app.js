@@ -25,9 +25,15 @@ admin.initializeApp({
 
 const firestore = admin.firestore();
 
-passport.serializeUser((user, done) => done(null, user));
+passport.serializeUser((user, done) => {
+  console.log("serialize", user)
+  done(null, user)
+});
 
-passport.deserializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => {
+  console.log("deserialize", user)
+  done(null, user)
+});
 
 const SamlOptions = {
   // URL that goes from the Identity Provider -> Service Provider
@@ -109,6 +115,7 @@ const saveReferrer = (req, res, next) => {
 const ensureAuthenticated = (req, res, next) => {
   console.log("auth?", req.isAuthenticated());
   console.log("user?", req.user);
+  console.log("session", req.session);
   if (req.isAuthenticated()) return next();
   else return res.redirect("/login");
 };
