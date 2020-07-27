@@ -70,6 +70,8 @@ passport.use(samlStrategy);
 
 const app = express();
 
+// custom parser for session store
+// adds dateModified field so we can prune old ones
 const parser = {
   read: doc => JSON.parse(doc.session),
   save: doc => {
@@ -80,7 +82,7 @@ const parser = {
   }
 };
 
-app.enable("trust proxy");
+app.enable("trust proxy"); // required when running on Heroku as SSL terminates before reaching express
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -94,7 +96,7 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
-    proxy: true,
+    proxy: true, // required when running on Heroku as SSL terminates before reaching express
     cookie: {
       secure: true,
       maxAge: 25 * 60 * 1000
@@ -171,13 +173,10 @@ app.post("/generateUIDs", (req, res) => {
   });
 });
 
-app.get("/", ensureAuthenticated, (req, res) => {
-  res.send("Authenticated!");
-});
-
-app.get("/token", saveReferrer, ensureAuthenticated, async (req, res) => {
+app.get("/", saveReferrer, ensureAuthenticated, async (req, res) => {
   const token = await generateToken(mapKerberosFields(req.user));
-  res.header("Set-Cookie", `firebase-token=${token}; Max-Age=60`); // ; Secure
+  console.log("token", token);
+  res.header("Set-Cookie", `firebase-token=${token}`); // ; Max-Age=60 ; Secure
   res.redirect(`${req.session.referrer}login/callback`);
 });
 
