@@ -155,7 +155,18 @@ const generateToken = async user => {
   const additionalClaims = { ...user }; // include sso data so auth rules can access it
 
   // only update user and db if this is the first time (email verified is false)
-  const { emailVerified } = await admin.auth().getUser(uid);
+  const { emailVerified } = await admin
+    .auth()
+    .getUser(uid)
+    .catch(error => {
+      if (error.code === "auth/user-not-found") {
+        return admin
+          .auth()
+          .createUser({ uid })
+          .catch(console.error);
+      } else console.error(error);
+    });
+
   if (!emailVerified) {
     await admin
       .auth()
