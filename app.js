@@ -203,6 +203,7 @@ app.post("/generateUIDs", (req, res) => {
 });
 
 app.get("/", saveReferrer, ensureAuthenticated, async (req, res) => {
+  console.log("hitting root")
   const token = await generateToken(mapKerberosFields(req.user));
   res.redirect(`${req.session.referrer}?token=${token}`);
 });
@@ -216,7 +217,11 @@ app.get(
 app.post(
   "/login/callback",
   passport.authenticate("saml", { failureRedirect: "/login/fail" }),
-  (req, res) => res.redirect("/")
+  (req, res) => {
+    console.log("successful callback")
+    console.log(req.user)
+    res.redirect("/");
+  }
 );
 
 app.get("/login/fail", (req, res) => res.status(401).send("Login failed"));
