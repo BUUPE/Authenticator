@@ -111,7 +111,6 @@ app.use(passport.session());
 
 // saves request referrer to session storage before initiating login
 const saveReferrer = (req, res, next) => {
-  console.log("saving referrer as", req.get("Referrer"))
   req.session.referrer = req.get("Referrer");
   return next();
 };
@@ -203,11 +202,9 @@ app.post("/generateUIDs", (req, res) => {
   });
 });
 
-app.get("/", saveReferrer, ensureAuthenticated, async (req, res) => {
-  console.log("hitting root")
-  const token = await generateToken(mapKerberosFields(req.user));
-  res.redirect(`${req.session.referrer}?token=${token}`);
-});
+app.get("/", saveReferrer, ensureAuthenticated, (req, res) =>
+  res.send("Authenticated")
+);
 
 app.get(
   "/login",
@@ -218,10 +215,9 @@ app.get(
 app.post(
   "/login/callback",
   passport.authenticate("saml", { failureRedirect: "/login/fail" }),
-  (req, res) => {
-    console.log("successful callback")
-    console.log(req.user)
-    res.redirect("/");
+  async (req, res) => {
+    const token = await generateToken(mapKerberosFields(req.user));
+    res.redirect(`${req.session.referrer}?token=${token}`);
   }
 );
 
