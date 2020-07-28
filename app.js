@@ -202,9 +202,10 @@ app.post("/generateUIDs", (req, res) => {
   });
 });
 
-app.get("/", saveReferrer, ensureAuthenticated, (req, res) =>
-  res.send("Authenticated")
-);
+app.get("/", saveReferrer, ensureAuthenticated, async (req, res) => {
+  const token = await generateToken(mapKerberosFields(req.user));
+  res.redirect(`${req.session.referrer}?token=${token}`);
+});
 
 app.get(
   "/login",
