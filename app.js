@@ -137,17 +137,6 @@ const fetchUID = email => {
   });
 };
 
-const mapKerberosFields = kerberosData => {
-  return {
-    firstName: kerberosData["urn:oid:2.5.4.42"],
-    lastName: kerberosData["urn:oid:2.5.4.4"],
-    email: kerberosData.email,
-    affiliations: kerberosData["urn:oid:1.3.6.1.4.1.5923.1.1.1.1"],
-    primaryAffiliation: kerberosData["urn:oid:1.3.6.1.4.1.5923.1.1.1.5"],
-    organization: kerberosData["urn:oid:2.5.4.10"]
-  };
-};
-
 // generates a firebase token, tied to the uid that matches the sso email
 const generateToken = async user => {
   const { email } = user;
@@ -187,6 +176,42 @@ const generateToken = async user => {
     .catch(error => console.error("Error creating custom token:", error));
 };
 
+// maps kerberos field names to human readable ones
+const mapKerberosFields = kerberosData => {
+  return {
+    firstName: kerberosData["urn:oid:2.5.4.42"],
+    lastName: kerberosData["urn:oid:2.5.4.4"],
+    email: kerberosData.email,
+    affiliations: kerberosData["urn:oid:1.3.6.1.4.1.5923.1.1.1.1"],
+    primaryAffiliation: kerberosData["urn:oid:1.3.6.1.4.1.5923.1.1.1.5"],
+    organization: kerberosData["urn:oid:2.5.4.10"]
+  };
+};
+
+// generates a token and redirects user with token as query param
+const redirectWithToken = async (req, res) => {
+  const token = await generateToken(mapKerberosFields(req.user));
+  res.redirect(`${req.session.referrer}?token=${token}`);
+};
+
+// if redirectWithToken is hit here, it means user has been authenticated this session
+app.get("/", saveReferrer, ensureAuthenticated, redirectWithToken);
+
+app.get(
+  "/login",
+  passport.authenticate("saml", { failureRedirect: "/login/fail" }),
+  (req, res) => res.redirect("/")
+);
+
+// redirectWithToken here rather than redirecting to root as that will change the saved referrer
+app.post(
+  "/login/callback",
+  passport.authenticate("saml", { failureRedirect: "/login/fail" }),
+  redirectWithToken
+);
+
+app.get("/login/fail", (req, res) => res.status(401).send("Login failed"));
+
 app.post("/generateUIDs", (req, res) => {
   const { emails } = req.body;
   const fetchUIDs = emails.map(email => fetchUID(email));
@@ -201,28 +226,6 @@ app.post("/generateUIDs", (req, res) => {
     res.json(mapped);
   });
 });
-
-app.get("/", saveReferrer, ensureAuthenticated, async (req, res) => {
-  const token = await generateToken(mapKerberosFields(req.user));
-  res.redirect(`${req.session.referrer}?token=${token}`);
-});
-
-app.get(
-  "/login",
-  passport.authenticate("saml", { failureRedirect: "/login/fail" }),
-  (req, res) => res.redirect("/")
-);
-
-app.post(
-  "/login/callback",
-  passport.authenticate("saml", { failureRedirect: "/login/fail" }),
-  async (req, res) => {
-    const token = await generateToken(mapKerberosFields(req.user));
-    res.redirect(`${req.session.referrer}?token=${token}`);
-  }
-);
-
-app.get("/login/fail", (req, res) => res.status(401).send("Login failed"));
 
 app.get("/shibboleth/metadata", (req, res) => {
   res.type("application/xml");
