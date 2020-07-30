@@ -26,6 +26,9 @@ admin.initializeApp({
 });
 
 const firestore = admin.firestore();
+firestore.settings({
+  ignoreUndefinedProperties: true
+});
 
 passport.serializeUser((user, done) => done(null, user));
 
@@ -139,12 +142,10 @@ const fetchUID = email => {
 
 // generates a firebase token, tied to the uid that matches the sso email
 const generateToken = async user => {
-  console.log("mapped user", user)
   const { email } = user;
   const uid = await fetchUID(email);
   const additionalClaims = { ...user }; // include sso data so auth rules can access it
 
-  // only update user and db if this is the first time (email verified is false)
   const { emailVerified } = await admin
     .auth()
     .getUser(uid)
@@ -157,6 +158,7 @@ const generateToken = async user => {
       } else console.error(error);
     });
 
+  // if user is new, set displayName and email
   if (!emailVerified) {
     await admin
       .auth()
@@ -166,8 +168,44 @@ const generateToken = async user => {
         emailVerified: true
       })
       .catch(console.error);
+  }
 
-    await firestore.doc(`users/${uid}`).update(user);
+  const doc = await firestore.doc(`users/${uid}`).get();
+  let dbUser = {};
+  const now = new Date();
+  const onemonth = 1000 /*ms*/ * 60 /*s*/ * 60 /*min*/ * 24 /*h*/ * 30; /*days*/
+  if (!doc.exists) {
+    // if user not in db, populate with kerberos fields
+    dbUser.name = `${user.firstName} ${user.lastName}`;
+    dbUser.email = user.email;
+    dbUser.organization = user.organization;
+    dbUser.roles = {};
+    user.affiliations.forEach(
+      affiliation => (dbUser.roles[affiliation] = "kerberos")
+    );
+    dbUser.lastMergedAffiliations = new Date();
+    await firestore.doc(`users/${uid}`).set(dbUser);
+  } else {
+    dbUser = doc.data();
+    // merge kerberos with db every month to catch changes
+    if (now - dbUser.lastMergedAffiliations > onemonth) {
+      dbUser.organization = user.organization; // update organization
+
+      // delete old affiliations that no longer apply
+      for (const [key, value] of Object.entries(dbUser.roles)) {
+        if (value === "kerberos" && !user.affiliations.includes(key))
+          delete dbUser.roles[key];
+      }
+
+      // add new affiliations
+      user.affiliations.forEach(
+        affiliation => (dbUser.roles[affiliation] = "kerberos")
+      );
+
+      // update date and push changes
+      dbUser.lastMergedAffiliations = new Date();
+      await firestore.doc(`users/${uid}`).update(dbUser);
+    }
   }
 
   return admin
@@ -191,7 +229,6 @@ const mapKerberosFields = kerberosData => {
 
 // generates a token and redirects user with token as query param
 const redirectWithToken = async (req, res) => {
-  console.log("kerberos user", req.user)
   const token = await generateToken(mapKerberosFields(req.user));
   res.redirect(`${req.session.referrer}?token=${token}`);
 };
