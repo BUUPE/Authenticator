@@ -139,6 +139,7 @@ const fetchUID = email => {
 
 // generates a firebase token, tied to the uid that matches the sso email
 const generateToken = async user => {
+  console.log("mapped user", user)
   const { email } = user;
   const uid = await fetchUID(email);
   const additionalClaims = { ...user }; // include sso data so auth rules can access it
@@ -190,6 +191,7 @@ const mapKerberosFields = kerberosData => {
 
 // generates a token and redirects user with token as query param
 const redirectWithToken = async (req, res) => {
+  console.log("kerberos user", req.user)
   const token = await generateToken(mapKerberosFields(req.user));
   res.redirect(`${req.session.referrer}?token=${token}`);
 };
