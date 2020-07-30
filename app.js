@@ -188,7 +188,8 @@ const generateToken = async user => {
   } else {
     dbUser = doc.data();
     // merge kerberos with db every month to catch changes
-    if (now - dbUser.lastMergedAffiliations > onemonth) {
+    const delta = now - dbUser.lastMergedAffiliations;
+    if (delta > onemonth || Number.isNaN(delta)) {
       dbUser.organization = user.organization; // update organization
 
       // delete old affiliations that no longer apply
