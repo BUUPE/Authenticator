@@ -146,7 +146,7 @@ const generateToken = async user => {
   const uid = await fetchUID(email);
   const additionalClaims = { ...user }; // include sso data so auth rules can access it
 
-  const { emailVerified } = await admin
+   const test = await admin
     .auth()
     .getUser(uid)
     .catch(error => {
@@ -155,8 +155,12 @@ const generateToken = async user => {
           .auth()
           .createUser({ uid })
           .catch(console.error);
-      } else console.error(error);
+      } else console.error("failed in get user", error);
     });
+
+  console.log("test", test)
+
+  const { emailVerified } = test;
 
   // if user is new, set displayName and email
   if (!emailVerified) {
@@ -167,7 +171,7 @@ const generateToken = async user => {
         email,
         emailVerified: true
       })
-      .catch(console.error);
+      .catch(e => console.error("failed in update", e));
   }
 
   const doc = await firestore.doc(`users/${uid}`).get();
