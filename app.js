@@ -26,9 +26,7 @@ admin.initializeApp({
 });
 
 const firestore = admin.firestore();
-firestore.settings({
-  ignoreUndefinedProperties: true
-});
+const removeUndefined = obj => JSON.parse(JSON.stringify(obj));
 
 passport.serializeUser((user, done) => done(null, user));
 
@@ -162,11 +160,14 @@ const generateToken = async user => {
   if (!emailVerified) {
     await admin
       .auth()
-      .updateUser(uid, {
-        displayName: `${user.firstName} ${user.lastName}`,
-        email,
-        emailVerified: true
-      })
+      .updateUser(
+        uid,
+        removeUndefined({
+          displayName: `${user.firstName} ${user.lastName}`,
+          email,
+          emailVerified: true
+        })
+      )
       .catch(console.error);
   }
 
@@ -184,7 +185,7 @@ const generateToken = async user => {
       affiliation => (dbUser.roles[affiliation] = "kerberos")
     );
     dbUser.lastMergedAffiliations = new Date();
-    await firestore.doc(`users/${uid}`).set(dbUser);
+    await firestore.doc(`users/${uid}`).set(removeUndefined(dbUser));
   } else {
     dbUser = doc.data();
     // merge kerberos with db every month to catch changes
@@ -205,7 +206,7 @@ const generateToken = async user => {
 
       // update date and push changes
       dbUser.lastMergedAffiliations = new Date();
-      await firestore.doc(`users/${uid}`).update(dbUser);
+      await firestore.doc(`users/${uid}`).update(removeUndefined(dbUser));
     }
   }
 
