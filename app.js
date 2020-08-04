@@ -135,20 +135,20 @@ const ensureAdmin = (req, res, next) => {
       .json({ error: "No Bearer token found in Authorization header!" });
 
   if (authToken) {
-    admin.auth().verifyIdToken(authToken)
-    .then(claims => {
-      if (claims.admin || claims.eboard) next();
-      else
-        res
-          .status(403)
-          .json({ error: "You don't have permission for this route!" });
-    })
-    .catch(error => {
-      console.error(error);
-        res
-          .status(403)
-          .json({ error: "Failed to verify token!" });
-    });   
+    admin
+      .auth()
+      .verifyIdToken(authToken)
+      .then(claims => {
+        if (claims.admin || claims.eboard) next();
+        else
+          res
+            .status(403)
+            .json({ error: "You don't have permission for this route!" });
+      })
+      .catch(error => {
+        console.error(error);
+        res.status(403).json({ error: "Failed to verify token!" });
+      });
   }
 };
 
@@ -266,6 +266,12 @@ const redirectWithToken = async (req, res) => {
   res.redirect(`${req.session.referrer}?token=${token}`);
 };
 
+// general error handler
+app.use((err, req, res, next) => {
+  console.error("Fatal error: " + JSON.stringify(err));
+  next(err);
+});
+
 // if redirectWithToken is hit here, it means user has been authenticated this session
 app.get("/", saveReferrer, ensureAuthenticated, redirectWithToken);
 
@@ -284,6 +290,12 @@ app.post(
 
 app.get("/login/fail", (req, res) => res.status(401).send("Login failed"));
 
+const validateEmail = email => {
+  // eslint-disable-next-line
+  const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(String(email).toLowerCase());
+};
+
 app.post("/generateUIDs", ensureAdmin, (req, res) => {
   const { emails } = req.body;
 
@@ -294,10 +306,10 @@ app.post("/generateUIDs", ensureAdmin, (req, res) => {
       .json({ error: '"emails" field is missing from request body!' });
   else if (!Array.isArray(emails))
     return res.status(403).json({ error: '"emails" field must be an array!' });
-  else if (!emails.every(e => typeof e === "string"))
+  else if (!emails.every(validateEmail))
     return res
       .status(403)
-      .json({ error: '"emails" must contain only strings!' });
+      .json({ error: '"emails" must contain valid emails!' });
 
   const fetchUIDs = emails.map(email => fetchUID(email));
   Promise.all(fetchUIDs).then(uids => {
@@ -326,12 +338,6 @@ app.get("/shibboleth/metadata", (req, res) => {
 });
 
 app.get("/keepalive", (req, res) => res.send("Alive"));
-
-// general error handler
-app.use((err, req, res, next) => {
-  console.error("Fatal error: " + JSON.stringify(err));
-  next(err);
-});
 
 const serverPort = process.env.PORT || 3030;
 app.listen(serverPort, () => console.log(`Listening on port ${serverPort}`));
