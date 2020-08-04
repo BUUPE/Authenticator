@@ -122,6 +122,36 @@ const ensureAuthenticated = (req, res, next) => {
   else return res.redirect("/login");
 };
 
+const ensureAdmin = (req, res, next) => {
+  let authToken = null;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.split(" ")[0] === "Bearer"
+  )
+    authToken = req.headers.authorization.split(" ")[1];
+  else
+    res
+      .status(403)
+      .json({ error: "No Bearer token found in Authorization header!" });
+
+  if (authToken) {
+    admin.auth().verifyIdToken(authToken)
+    .then(claims => {
+      if (claims.admin || claims.eboard) next();
+      else
+        res
+          .status(403)
+          .json({ error: "You don't have permission for this route!" });
+    })
+    .catch(error => {
+      console.error(error);
+        res
+          .status(403)
+          .json({ error: "Failed to verify token!" });
+    });   
+  }
+};
+
 // checks firestore for uid, if not it creates one for the future
 const fetchUID = email => {
   const doc = firestore.doc(`uids/${email}`);
@@ -142,7 +172,6 @@ const fetchUID = email => {
 const generateToken = async user => {
   const { email } = user;
   const uid = await fetchUID(email);
-  const additionalClaims = { ...user }; // include sso data so auth rules can access it
 
   const { emailVerified } = await admin
     .auth()
@@ -210,6 +239,8 @@ const generateToken = async user => {
     }
   }
 
+  const additionalClaims = { ...dbUser.roles }; // include roles as claims so security rules can access them
+
   return admin
     .auth()
     .createCustomToken(uid, additionalClaims)
@@ -253,8 +284,21 @@ app.post(
 
 app.get("/login/fail", (req, res) => res.status(401).send("Login failed"));
 
-app.post("/generateUIDs", (req, res) => {
+app.post("/generateUIDs", ensureAdmin, (req, res) => {
   const { emails } = req.body;
+
+  // validate request
+  if (emails === undefined)
+    return res
+      .status(403)
+      .json({ error: '"emails" field is missing from request body!' });
+  else if (!Array.isArray(emails))
+    return res.status(403).json({ error: '"emails" field must be an array!' });
+  else if (!emails.every(e => typeof e === "string"))
+    return res
+      .status(403)
+      .json({ error: '"emails" must contain only strings!' });
+
   const fetchUIDs = emails.map(email => fetchUID(email));
   Promise.all(fetchUIDs).then(uids => {
     const mapped = uids.map((uid, i) => {
