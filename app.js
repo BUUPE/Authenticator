@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const cron = require("node-cron");
 const fetch = require("node-fetch");
+const cors = require('cors');
 const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
 const express = require("express");
@@ -296,7 +297,7 @@ const validateEmail = email => {
   return re.test(String(email).toLowerCase());
 };
 
-app.post("/generateUIDs", ensureAdmin, (req, res) => {
+app.post("/generateUIDs", cors(), ensureAdmin, (req, res) => {
   const { emails } = req.body;
 
   // validate request
