@@ -297,6 +297,7 @@ const validateEmail = email => {
   return re.test(String(email).toLowerCase());
 };
 
+app.options('/generateUIDs', cors());
 app.post("/generateUIDs", cors(), ensureAdmin, (req, res) => {
   const { emails } = req.body;
 
