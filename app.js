@@ -304,13 +304,13 @@ app.post("/generateUIDs", cors(), ensureAdmin, (req, res) => {
   // validate request
   if (emails === undefined)
     return res
-      .status(403)
+      .status(400)
       .json({ error: '"emails" field is missing from request body!' });
   else if (!Array.isArray(emails))
-    return res.status(403).json({ error: '"emails" field must be an array!' });
+    return res.status(400).json({ error: '"emails" field must be an array!' });
   else if (!emails.every(validateEmail))
     return res
-      .status(403)
+      .status(400)
       .json({ error: '"emails" must contain valid emails!' });
 
   const fetchUIDs = emails.map(email => fetchUID(email));
