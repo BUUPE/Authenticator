@@ -291,7 +291,7 @@ app.post(
 
 app.get("/login/fail", (req, res) => res.status(401).send("Login failed"));
 
-const validateEmail = email => {
+const validEmail = email => {
   // eslint-disable-next-line
   const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
@@ -308,7 +308,7 @@ app.post("/generateUIDs", cors(), ensureAdmin, (req, res) => {
       .json({ error: '"emails" field is missing from request body!' });
   else if (!Array.isArray(emails))
     return res.status(400).json({ error: '"emails" field must be an array!' });
-  else if (!emails.every(validateEmail))
+  else if (!emails.every(validEmail))
     return res
       .status(400)
       .json({ error: '"emails" must contain valid emails!' });
