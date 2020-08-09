@@ -210,7 +210,7 @@ const generateToken = async user => {
     dbUser.name = `${user.firstName} ${user.lastName}`;
     dbUser.email = user.email;
     dbUser.organization = user.organization;
-    dbUser.roles = {};
+    dbUser.roles = {nonmember: true};
     user.affiliations.forEach(
       affiliation => (dbUser.roles[affiliation] = "kerberos")
     );
