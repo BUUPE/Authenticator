@@ -264,6 +264,7 @@ const mapKerberosFields = kerberosData => {
 // generates a token and redirects user with token as query param
 const redirectWithToken = async (req, res) => {
   const token = await generateToken(mapKerberosFields(req.user));
+  console.log(`sending user to ${req.session.referrer}`);
   res.redirect(`${req.session.referrer}?token=${token}`);
 };
 
