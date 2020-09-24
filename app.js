@@ -113,6 +113,7 @@ app.use(passport.session());
 
 // saves request referrer to session storage before initiating login
 const saveReferrer = (req, res, next) => {
+  console.log(`saving referrer as ${req.get("Referrer")}`);
   req.session.referrer = req.get("Referrer");
   return next();
 };
